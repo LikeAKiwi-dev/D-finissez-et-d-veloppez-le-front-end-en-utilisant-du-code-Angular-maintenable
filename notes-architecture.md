@@ -4,7 +4,7 @@
 
 - Les composants sont rangés dans `src/app/pages`.
 - Aucun dossier `services`, `core` ou `shared`.  
-  Toute la logique métier, la récupération des données et les calculs sont dans les composants.
+  Toute la logique métier, la récupération des données et les calculs sont réalisés dans les composants, ce qui réduit la maintenabilité.
 
 **Exemple (src/app/pages/home/home.component.ts)**  
 private olympicUrl = './assets/mock/olympic.json';  
@@ -13,22 +13,24 @@ this.http.get<any[]>(this.olympicUrl).subscribe(data => { ... });
 }
 
 **Risques :**
-- duplication de code
-- faible testabilité
-- difficile à remplacer par une API réelle
+- duplication de code,
+- faible testabilité,
+- difficile à remplacer par une API réelle,
+- forte dépendance des composants aux sources de données.
 
-**Amélioration :** créer un `OlympicService`.
+**Amélioration :** créer un `DataService`.
 
-Les composants ont trop de responsabilités :
+Les composants actuels ont trop de responsabilités :
 - `home.component.ts` : HTTP, calculs, graphiques, navigation.
 - `country.component.ts` : HTTP, filtrage, calculs, graphiques.
 
 ---
 
 ## 2. Analyse du HomeComponent
+
 Fichier : `src/app/pages/home/home.component.ts`
 
-### Appels HTTP
+### Appels HTTP dans le composant
 ngOnInit() {  
 this.http.get<any[]>(this.olympicUrl).subscribe(...);  
 }  
@@ -41,15 +43,15 @@ i.participations.map((p: any) => p.medalsCount)
 
 Interfaces attendues :
 - `Participation` : id, year, city, medalsCount, athleteCount
-- `OlympicCountry` : id, country, participations[]
+- `Olympic` : id, country, participations[]
 
 ### Console.log inutiles
 console.log(JSON.stringify(data))  
-→ À retirer
+→ À retirer.
 
 ### Gestion d’erreur incomplète
 this.error = error.message  
-→ Aucune balise affichant cette erreur dans `home.component.html`.
+→ Aucune balise n’affiche cette erreur dans `home.component.html`.
 
 ### Observables gérés manuellement
 - subscribe direct
@@ -57,46 +59,47 @@ this.error = error.message
   → Peu robuste.
 
 ### Logique Chart.js + navigation Angular mélangées
-- Le clic sur un segment du graphique redirige via `router.navigate`.  
+- Le clic dans le graphique redirige la route Angular.  
   → Mauvaise séparation des responsabilités.
 
 ### Destruction manquante du graphique
-Aucun `ngOnDestroy()` pour détruire le graphique → risque de fuites mémoire.
+Aucun `ngOnDestroy()` → risque de fuites mémoire si le composant est recréé.
 
 ---
 
 ## 3. Analyse du CountryComponent
+
 Fichier : `src/app/pages/country/country.component.ts`
 
 ### Duplication de l’appel HTTP
-Même logique de chargement que dans Home → devrait être centralisé dans un service.
+Même logique que dans `HomeComponent` → devrait passer par un service unique.
 
 ### Usage massif de any
 selectedCountry = data.find((i: any) => ...)  
-→ Doit être remplacé par des types stricts.
+→ Doit être remplacé par des types stricts (`Olympic` et `Participation`).
 
 ### Gestion du paramètre de route peu lisible
 route.paramMap.subscribe(...)  
-→ `snapshot` serait plus simple :  
+→ `snapshot` serait plus clair :  
 route.snapshot.paramMap.get('countryName')
 
-
 ### Erreur jamais affichée
-this.error existe mais n’apparaît pas dans le template HTML.
+this.error existe, mais n’apparaît pas dans `country.component.html`.
 
 ---
 
-## 6. Synthèse des problèmes identifiés
+## 4. Synthèse des problèmes identifiés
 
 - Appels HTTP directement dans les composants.
 - Usage massif du type `any`.
-- Absence d’interfaces TypeScript.
+- Absence totale d’interfaces TypeScript.
 - Aucune couche service.
 - Observables gérés manuellement.
 - Logique Chart.js mélangée avec la logique Angular.
-- Erreurs jamais affichées dans la vue.
-- Présence de console.log.
-- HTML avec du code inutile.
+- Erreurs jamais affichées dans l’UI.
+- Présence de `console.log`.
+- HTML contenant du code inutile.
+- Composants trop volumineux (pas de découpage).
 
 ---
 
@@ -107,167 +110,142 @@ Le code actuel fonctionne mais présente plusieurs anti-patterns Angular :
 - mauvaise séparation des responsabilités,
 - typage faible,
 - duplication de logique,
-- gestion insuffisante des observables,
-- tests non pertinents.
-
-## Étape 2 – Proposition de nouvelle architecture front-end
+- gestion trop basique des observables,
+- tests non pertinents,
+- architecture difficile à faire évoluer vers une vraie API back-end.
 
 ---
 
-### 1. Principes d’architecture retenus
+# Étape 2 – Proposition de nouvelle architecture front-end
+
+## 1. Principes d’architecture retenus
 
 - **Séparer l’affichage de la logique métier**
-  - Les composants (`components` / `pages`) ne contiennent que :
-    - la gestion de l’affichage,
-    - les interactions utilisateur,
-    - le binding des données.
-  - La logique métier (calculs, transformations, accès aux données) est déplacée dans des **services**.
+  - Les composants gèrent uniquement l’UI, les interactions et le binding.
+  - Les services gèrent les accès aux données, les calculs, les transformations.
 
 - **Centraliser les accès aux données dans `services/`**
-  - Tous les appels aux données (aujourd’hui : JSON local, demain : API REST) passent par un service Angular dédié (`OlympicService`).
-  - Pattern utilisé : **Singleton** (services fournis en `providedIn: 'root'`).
+  - Tous les appels au JSON local puis à l’API REST passeront par `DataService`.
+  - Pattern : **Singleton** (Angular fournit une seule instance via `providedIn: 'root'`).
 
 - **Typage fort avec des modèles (`models/`)**
-  - Création d’interfaces TypeScript pour décrire les données manipulées :
-    - `OlympicCountry`
-    - `Participation`
-  - Objectif : supprimer l’usage du type `any` et sécuriser les évolutions.
+  - Création des interfaces :
+    - `Olympic` (id, country, participations[])
+    - `Participation` (id, year, city, medalsCount, athleteCount)
 
-- **Distinguer pages, composants et services**
-  - `pages/` : composants liés aux routes (écrans principaux).
-  - `components/` : composants réutilisables éventuels (cartes, graphiques, etc.).
-  - `services/` : logique de données et de métier.
-  - `models/` : définitions des types de données.
+- **Organisation claire des dossiers**
+  - `pages/` : composants attachés au routing (écrans)
+  - `components/` : composants UI réutilisables (ex : graphiques, header…)
+  - `services/` : logique métier et accès aux données
+  - `models/` : interfaces TypeScript
 
 ---
 
-### 2. Nouvelle arborescence proposée
+## 2. Nouvelle arborescence proposée
 
-Arborescence cible de `src/app/` :
+Cible pour `src/app/` :
 
 - `src/app/`
   - `pages/`
     - `home/`
-      - `home.component.ts`
-      - `home.component.html`
-      - `home.component.scss`
+      - home.component.ts / .html / .scss
     - `country/`
-      - `country.component.ts`
-      - `country.component.html`
-      - `country.component.scss`
+      - country.component.ts / .html / .scss
     - `not-found/`
-      - `not-found.component.ts`
-      - `not-found.component.html`
-      - `not-found.component.scss`
+      - not-found.component.ts / .html / .scss
   - `components/`
-    - (optionnel pour plus tard : composants de présentation réutilisables, par exemple un composant de carte pays ou un composant de graphique)
+    - (pour futurs composants réutilisables : graphique, header, carte pays…)
   - `services/`
-    - `olympic.service.ts`
+    - `data.service.ts`
   - `models/`
-    - `olympic-country.model.ts`
-    - `participation.model.ts`
+    - `olympic.model.ts` (interface `Olympic`)
+    - `participation.model.ts` (interface `Participation`)
   - `app-routing.module.ts`
   - `app.component.ts / .html / .scss`
 
-Cette structure reste simple mais :
-- sépare clairement les responsabilités,
-- prépare l’extension du projet (nouvelles pages, nouveaux services, etc.).
+Cette structure :
+- sépare clairement la présentation de la logique métier,
+- prépare l’arrivée d’une API réelle,
+- favorise la modularité.
 
 ---
 
-### 3. Répartition des fichiers existants (déplacement “virtuel”)
+## 3. Répartition des fichiers existants (déplacement “virtuel”)
 
-Pour l’instant, les fichiers ne sont pas encore réellement déplacés dans le code, mais **la structure cible est la suivante** :
+### Pages (src/app/pages/)
+- `HomeComponent` → reste dans `pages/home`
+- `CountryComponent` → reste dans `pages/country`
+- `NotFoundComponent` → reste dans `pages/not-found`
 
-- **Pages** (`src/app/pages/`)
-  - `HomeComponent` → reste dans `src/app/pages/home/`
-  - `CountryComponent` → reste dans `src/app/pages/country/`
-  - `NotFoundComponent` → reste dans `src/app/pages/not-found/`
+### Services (src/app/services/)
+- Nouveau fichier : `data.service.ts`
+  - Rôle :
+    - charger les données depuis `assets/mock/olympic.json`,
+    - fournir :
+      - `getCountries(): Observable<Olympic[]>`
+      - `getCountryByName(name: string): Observable<Olympic | undefined>`
+  - Singleton (`providedIn: root`)
 
-- **Services** (`src/app/services/`)
-  - Nouveau fichier `olympic.service.ts`
-    - Rôle :
-      - charger les données depuis `assets/mock/olympic.json`,
-      - exposer des méthodes comme :
-        - `getCountries(): Observable<OlympicCountry[]>`
-        - `getCountryByName(name: string): Observable<OlympicCountry | undefined>`
-      - centraliser tous les accès aux données.
-    - Pattern : **Singleton Angular** (service fourni en `root`).
+### Modèles (src/app/models/)
+- `olympic.model.ts` → interface `Olympic`
+- `participation.model.ts` → interface `Participation`
 
-- **Modèles** (`src/app/models/`)
-  - `olympic-country.model.ts`
-    - contient l’interface `OlympicCountry`
-  - `participation.model.ts`
-    - contient l’interface `Participation`
-
-- **Composants réutilisables** (`src/app/components/`)
-  - Aucun dans l’immédiat, mais ce dossier est prévu pour :
-    - un éventuel composant de graphique réutilisable,
-    - un composant de carte “pays”,
-    - d’autres éléments UI si le projet grandit.
+### Composants réutilisables (src/app/components/)
+- Vider les gros composants à l’avenir :
+  - `MedalChartComponent` (pie chart)
+  - `CountryStatsComponent` (KPI pays)
+  - `HeaderComponent` (titre + stats réutilisable)
 
 ---
 
-### 4. Design patterns utilisés et bénéfices
+## 4. Design patterns utilisés et bénéfices attendus
 
-- **Pattern Singleton (services Angular)**
-  - Les services Angular (comme `OlympicService`) sont fournis via `providedIn: 'root'`.
-  - Cela signifie qu’il existe **une seule instance partagée** dans toute l’application.
-  - Bénéfices :
-    - état centralisé (si nécessaire),
-    - configuration des accès aux données (URL API, headers…) au même endroit,
-    - plus simple à tester et à maintenir.
+### Pattern Singleton (services)
+- Angular instancie `DataService` une seule fois.
+- Centralise :
+  - URL des données,
+  - logique de transformation,
+  - interaction future avec l’API.
 
-- **Séparation Component / Service**
-  - Les composants ne font plus d’appels HTTP ni de calculs lourds.
-  - Les services :
-    - récupèrent les données,
-    - les transforment si besoin,
-    - les fournissent aux composants via des `Observable` ou des `Promise`.
-  - Bénéfices :
-    - composants plus simples, plus faciles à lire,
-    - logique métier testable indépendamment de l’UI,
-    - réutilisabilité (un même service peut alimenter plusieurs pages).
+### Séparation Component / Service
+- Les pages ne gèrent plus :
+  - appels HTTP,
+  - agrégations de données,
+  - parsing JSON.
+- Avantages :
+  - composants plus propres,
+  - meilleure testabilité,
+  - meilleure évolutivité.
 
-- **Modèles (interfaces TypeScript)**
-  - Suppression progressive de `any`.
-  - Bénéfices :
-    - cohérence des données,
-    - auto-complétion dans l’IDE,
-    - erreurs détectées à la compilation plutôt qu’à l’exécution.
+### Modèles TypeScript
+- Plus de `any`.
+- Sécurité de typage.
+- Meilleure lisibilité du code.
+- Auto-complétion dans l’IDE.
 
 ---
 
-### 5. Préparation à l’intégration d’un back-end
+## 5. Préparation à l’intégration d’un back-end
 
-Même si, dans ce projet, les données proviennent d’un fichier JSON local (`assets/mock/olympic.json`), l’architecture proposée anticipe l’arrivée d’une vraie API back-end.
-
-Avec la structure proposée :
-
-- Les composants (Home, Country) ne “savent pas” d’où viennent les données.
-- Si, plus tard, le back-end expose une API REST :
-  - seul `OlympicService` devra être modifié (remplacer la lecture du JSON par des appels HTTP).
-  - les signatures des méthodes (`getCountries()`, `getCountryByName()`) pourront rester identiques.
-- Les tests pourront simuler (mock) le service sans changer les composants.
-
-Cette organisation :
-- limite l’impact des changements côté serveur,
-- respecte le principe de **faible couplage** entre front-end et back-end.
+L’organisation proposée :
+- permet de remplacer facilement les mocks JSON par de vraies requêtes HTTP,
+- isole complètement la logique d’accès aux données dans `DataService`,
+- garantit que les pages ne manipulent que des données typées,
+- limite les modifications au seul dossier `services/` lors du passage à une API REST.
 
 ---
 
-### 6. Synthèse de l’architecture cible
+## 6. Synthèse de l’architecture cible
 
-En résumé, l’architecture proposée :
+L’architecture finale recherchée :
 
-- garde les **pages** dans `src/app/pages` (structure existante, mais clarifiée),
-- ajoute :
-  - un dossier `services/` pour tous les accès aux données,
-  - un dossier `models/` pour les types de données,
-  - un dossier `components/` pour les futurs composants de présentation réutilisables,
+- conserve `src/app/pages` pour les écrans,
+- crée `services/`, `models/`, `components/`,
 - applique :
-  - le pattern **Singleton** pour les services,
-  - la **séparation nette component / service**,
-  - l’usage systématique d’**interfaces TypeScript** pour remplacer `any`.
+  - pattern Singleton pour les services,
+  - séparation nette component/service,
+  - typage strict,
+- prépare la transition naturelle vers une API back-end.
 
-Cette architecture reste simple, claire et proportionnée à la taille du projet, tout en rendant le code plus maintenable et prêt pour une future intégration avec une API back-end.
+Cette architecture est simple, claire, évolutive et parfaitement adaptée pour la suite du projet TéléSport.
+
