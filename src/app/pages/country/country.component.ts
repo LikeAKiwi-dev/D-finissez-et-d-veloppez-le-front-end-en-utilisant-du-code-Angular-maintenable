@@ -39,8 +39,6 @@ export class CountryComponent implements OnInit {
         }
 
         this.country = country;
-        /* this.computeStats(country);
-         this.buildCountryChart(country);*/
       },
       error: (err: HttpErrorResponse) => {
         console.error('Erreur lors du chargement des données :', err);

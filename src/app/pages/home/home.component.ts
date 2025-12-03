@@ -31,7 +31,6 @@ export class HomeComponent implements OnInit {
 
         if (data && data.length > 0) {
 
-          // 1. Total des JO différents
           this.totalJOs = Array.from(
             new Set(
               data.flatMap((o: Olympic) =>
@@ -40,7 +39,6 @@ export class HomeComponent implements OnInit {
             )
           ).length;
 
-          // 2. Nombre de pays
           const countries: string[] = data.map((o: Olympic) => o.country);
           this.totalCountries = countries.length;
         }
