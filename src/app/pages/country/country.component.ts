@@ -25,13 +25,13 @@ export class CountryComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const countryName = this.route.snapshot.paramMap.get('countryName');
-    if (!countryName) {
+    const countryId = parseInt(<string>this.route.snapshot.paramMap.get('id'));
+    if (!countryId) {
       this.error = 'Aucun pays spécifié.';
       return;
     }
 
-    this.dataService.getCountryByName(countryName).subscribe({
+    this.dataService.getCountryById(countryId).subscribe({
       next: (country: Olympic | undefined) => {
         if (!country) {
           this.error = 'Pays introuvable.';

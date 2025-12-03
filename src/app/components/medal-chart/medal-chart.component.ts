@@ -69,8 +69,8 @@ export class MedalChartComponent implements OnChanges, OnDestroy {
         onClick: (event, elements) => {
           if (elements.length > 0) {
             const index = elements[0].index;
-            const countryName = labels[index];
-            this.router.navigate(['country', countryName]);
+            const countryId = this.olympics[index].id;
+            this.router.navigate(['country', countryId]);
           }
         }
       }

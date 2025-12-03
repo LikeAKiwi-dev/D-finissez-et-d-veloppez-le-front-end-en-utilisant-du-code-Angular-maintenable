@@ -68,7 +68,7 @@ export class CountryCardComponent implements OnChanges, OnDestroy {
         labels: years,
         datasets: [
           {
-            label: 'countries',
+            label: 'Médailles par année',
             data: medalsByYear,
             backgroundColor: '#0b868f'
           }

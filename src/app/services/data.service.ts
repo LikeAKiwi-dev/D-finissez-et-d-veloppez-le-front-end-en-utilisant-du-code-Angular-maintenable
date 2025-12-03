@@ -23,4 +23,12 @@ export class DataService {
       )
     );
   }
+
+  getCountryById(countryId: number): Observable<Olympic | undefined> {
+    return this.getOlympics().pipe(
+      map((olympics: Olympic[]) =>
+        olympics.find(o => o.id === countryId)
+      )
+    );
+  }
 }
