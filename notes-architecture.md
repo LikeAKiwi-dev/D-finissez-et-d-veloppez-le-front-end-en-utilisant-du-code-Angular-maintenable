@@ -193,7 +193,7 @@ Cette structure :
 ### Composants réutilisables (src/app/components/)
 - Vider les gros composants à l’avenir :
   - `MedalChartComponent` (pie chart)
-  - `CountryStatsComponent` (KPI pays)
+  - `CountryCardComponent` (KPI pays)
   - `HeaderComponent` (titre + stats réutilisable)
 
 ---

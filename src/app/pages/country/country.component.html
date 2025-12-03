@@ -1,29 +1,13 @@
 <div>
-  <div>
-    <div class="center">
-    </div>
-    <div class="split">
-      <div>
-        <p>Number of entries</p>
-        <p>{{ totalEntries }}</p>
-      </div>
-      <div>
-        <p>Total Number of medals</p>
-        <p>{{ totalMedals }}</p>
-      </div>
-      <div>
-        <p>Total Number of athletes</p>
-        <p>{{ totalAthletes }}</p>
-      </div>
-    </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
   </div>
-  <div class="chart-container wrapper-container">
-    <div class="container">
-      <canvas id="countryChart"></canvas>
-      <h2>Date</h2>
-    </div>
-  </div>
-  <div class="center">
-    <a routerLink="">Go back</a>
-  </div>
+
+  <app-country-card
+    *ngIf="country"
+    [country]="country">
+  </app-country-card>
+
 </div>
+
