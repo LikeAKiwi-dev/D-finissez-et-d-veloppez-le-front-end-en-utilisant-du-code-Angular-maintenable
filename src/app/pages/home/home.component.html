@@ -1,5 +1,10 @@
-<h2>Olympic games app</h2>
+<div class="header">
+  <h2>Olympic games app</h2>
+  <em>Jordan Chatel</em>
+</div>
+
 <hr/>
+
 <div>
   <div>
     <div class="center">
@@ -7,12 +12,12 @@
     </div>
     <div class="split">
       <div>
-        <p>Number of countries</p>
-        <p>{{ totalCountries }}</p>
+        <p>Nombres de pays</p>
+        <p>{{ totalCountries | number }}</p>
       </div>
       <div>
-        <p>Number of JOs</p>
-        <p>{{ totalJOs }}</p>
+        <p>Nombres de JOs</p>
+        <p>{{ totalJOs | number }}</p>
       </div>
     </div>
   </div>

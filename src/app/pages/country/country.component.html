@@ -1,8 +1,6 @@
 <div>
 
-  <div *ngIf="error" class="error-message">
-    {{ error }}
-  </div>
+  <app-not-found *ngIf="error" [errorMsg]="error"></app-not-found>
 
   <app-country-card
     *ngIf="country"

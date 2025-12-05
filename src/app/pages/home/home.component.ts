@@ -16,7 +16,7 @@ export class HomeComponent implements OnInit {
   public totalCountries = 0;
   public totalJOs = 0;
   public error = '';
-  public titlePage: string = 'Medals per Country';
+  public titlePage: string = 'Médailles par pays';
   public olympics: Olympic[] = [];
 
   constructor(

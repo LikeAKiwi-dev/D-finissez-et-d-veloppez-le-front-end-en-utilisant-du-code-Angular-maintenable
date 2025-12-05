@@ -4,16 +4,16 @@
     </div>
     <div class="split">
       <div>
-        <p>Number of entries</p>
-        <p>{{ totalEntries }}</p>
+        <p>Nombre d’entrées</p>
+        <p>{{ totalEntries | number }}</p>
       </div>
       <div>
-        <p>Total Number of medals</p>
-        <p>{{ totalMedals }}</p>
+        <p>Nombre total de médailles</p>
+        <p>{{ totalMedals | number }}</p>
       </div>
       <div>
-        <p>Total Number of athletes</p>
-        <p>{{ totalAthletes }}</p>
+        <p>Nombre total d’athlètes</p>
+        <p>{{ totalAthletes | number }}</p>
       </div>
     </div>
   </div>
@@ -23,6 +23,6 @@
     </div>
   </div>
   <div class="center">
-    <a routerLink="">Go back</a>
+    <a routerLink="">Retour</a>
   </div>
 </div>

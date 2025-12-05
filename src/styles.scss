@@ -3,6 +3,18 @@
     flex-direction: column;
 }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.header em {
+  font-style: italic;
+  text-align: right;
+}
+
 .center {
     display: flex;
     justify-content: center;

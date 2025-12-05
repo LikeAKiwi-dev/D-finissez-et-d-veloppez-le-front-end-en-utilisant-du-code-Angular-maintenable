@@ -13,11 +13,6 @@ const routes: Routes = [
     path : 'country/:id',
     component : CountryComponent
   },
-
-  {
-    path : 'not-found',
-    component : NotFoundComponent
-  },
   {
     path: '**',
     component: NotFoundComponent,
