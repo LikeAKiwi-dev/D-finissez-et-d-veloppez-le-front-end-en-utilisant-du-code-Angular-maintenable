@@ -16,15 +16,6 @@ export class DataService {
     return this.http.get<Olympic[]>(this.olympicUrl);
   }
 
-  // Cette methode n'est pas utilisée actuellement dans l'application, mais peut être utile pour des fonctionnalités futures
-  getCountryByName(countryName: string): Observable<Olympic | undefined> {
-    return this.getOlympics().pipe(
-      map((olympics: Olympic[]) =>
-        olympics.find(o => o.country === countryName)
-      )
-    );
-  }
-
   getCountryById(countryId: number): Observable<Olympic | undefined> {
     return this.getOlympics().pipe(
       map((olympics: Olympic[]) =>

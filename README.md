@@ -1,29 +1,142 @@
-# OlympicGamesStarter
+# Olympic Dashboard – Angular Application
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.0.6.
+Application Angular permettant de visualiser les données des Jeux Olympiques :
 
-Don't forget to install your node_modules before starting (`npm install`).
+- Dashboard global
+- Graphique des médailles par pays
+- Page détail d’un pays
+- Évolution des médailles dans le temps
 
-## Development server
+---
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+## 1. Installation
 
-## Build
+### Prérequis
+- Node.js ≥ 18
+- Angular CLI ≥ 17
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+### Installation des dépendances
+``npm install``
 
-## Where to start
+### Lancement du projet
+``ng serve``
 
-As you can see, an architecture has already been defined for the project. It is just a suggestion, you can choose to use your own. The predefined architecture includes (in addition to the default angular architecture) the following:
 
-- `components` folder: contains every reusable components
-- `pages` folder: contains components used for routing
-- `core` folder: contains the business logic (`services` and `models` folders)
+L'application sera disponible sur :
+http://localhost:4200
 
-I suggest you to start by understanding this starter code. Pay an extra attention to the `app-routing.module.ts` and the `olympic.service.ts`.
+---
 
-Once mastered, you should continue by creating the typescript interfaces inside the `models` folder. As you can see I already created two files corresponding to the data included inside the `olympic.json`. With your interfaces, improve the code by replacing every `any` by the corresponding interface.
+## 2. Structure du projet
 
-You're now ready to implement the requested features.
+Le projet suit une architecture claire, inspirée du style guide Angular.
 
-Good luck!
+```
+src/app/
+├── pages/
+│ ├── home/
+│ │ ├── home.component.ts
+│ │ ├── home.component.html
+│ │ └── home.component.scss
+│ ├── country/
+│ │ ├── country.component.ts
+│ │ ├── country.component.html
+│ │ └── country.component.scss
+│ └── not-found/
+│ ├── not-found.component.ts
+│ └── not-found.component.html
+│
+├── components/
+│ ├── medal-chart/
+│ │ ├── medal-chart.component.ts
+│ │ ├── medal-chart.component.html
+│ │ └── medal-chart.component.scss
+│ └── country-card/
+│ ├── country-card.component.ts
+│ ├── country-card.component.html
+│ └── country-card.component.scss
+│
+├── services/
+│ └── data.service.ts
+│
+├── models/
+│ ├── olympic.model.ts
+│ └── participation.model.ts
+│
+├── app-routing.module.ts
+└── app.component.ts
+```
+
+---
+
+## 3. Fonctionnalités
+
+### Dashboard (Home)
+- Titre et texte introductif
+- Nombre total de pays
+- Nombre total de participations
+- Pie chart (Chart.js)
+- Navigation au clic vers la page détail d’un pays
+
+### Page Détail (Country)
+- KPIs : total médailles, total athlètes, nombre de participations
+- Courbe d’évolution des médailles
+- Bouton retour
+- Gestion des erreurs :
+  - ID invalide
+  - Pays introuvable
+  - Redirection vers Not Found
+
+### Page Not Found
+- Message d’erreur clair
+- Activée sur mauvaise URL ou ID invalide
+
+---
+
+## 4. Technologies utilisées
+
+- Angular 17
+- TypeScript (zéro any)
+- Chart.js pour les graphiques
+- Observables & HttpClient
+- Architecture modulaire (pages / components / services / models)
+
+---
+
+## 5. Qualité du code
+
+- Aucun console.log
+- Aucun any
+- Code lisible et structuré
+- Observables détruits si nécessaire
+- Composants réutilisables
+- Architecture documentée dans ARCHITECTURE.md
+
+---
+
+## 6. Données
+
+Les données proviennent du fichier JSON :
+``assets/mock/olympic.json``
+
+
+Le DataService centralise :
+- la récupération des données,
+- la recherche par ID.
+
+---
+
+## 7. Limites actuelles
+
+- Données statiques (mock JSON)
+- Aucune API externe pour le moment
+- Style minimaliste pour laisser la priorité à la structure Angular
+
+---
+
+## 8. Auteur
+
+Projet réalisé par **Jordan Chatel**  
+Parcours : Développeur Full-Stack Angular / Java – OpenClassrooms
+
+
