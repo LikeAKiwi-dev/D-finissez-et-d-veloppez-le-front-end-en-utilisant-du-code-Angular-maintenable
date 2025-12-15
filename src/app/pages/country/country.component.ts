@@ -2,9 +2,12 @@ import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {HttpErrorResponse} from '@angular/common/http';
 import {Chart} from 'chart.js/auto';
-
 import {DataService} from '../../services/data.service';
 import {Olympic} from '../../models/olympic.model';
+import { DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+
 
 @Component({
   selector: 'app-country',
@@ -15,7 +18,7 @@ export class CountryComponent implements OnInit {
 
   country?: Olympic;
   error: string = '';
-
+  private readonly destroyRef = inject(DestroyRef);
   private chart?: Chart;
 
   constructor(
@@ -31,7 +34,9 @@ export class CountryComponent implements OnInit {
       return;
     }
 
-    this.dataService.getCountryById(countryId).subscribe({
+    this.dataService.getCountryById(countryId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: (country: Olympic | undefined) => {
         if (!country) {
           this.error = 'Pays introuvable.';

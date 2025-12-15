@@ -1,10 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-
 import { DataService } from '../../services/data.service';
 import { Olympic } from '../../models/olympic.model';
 import { Participation } from '../../models/participation.model';
+import { DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 
 @Component({
   selector: 'app-home',
@@ -13,6 +15,7 @@ import { Participation } from '../../models/participation.model';
 })
 export class HomeComponent implements OnInit {
 
+  private readonly destroyRef = inject(DestroyRef);
   public totalCountries = 0;
   public totalJOs = 0;
   public error = '';
@@ -25,27 +28,28 @@ export class HomeComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.dataService.getOlympics().subscribe({
-      next: (data: Olympic[]) => {
-        this.olympics = data;
+    this.dataService.getOlympics()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data: Olympic[]) => {
+          this.olympics = data;
 
-        if (data && data.length > 0) {
-
-          this.totalJOs = Array.from(
-            new Set(
-              data.flatMap((o: Olympic) =>
-                o.participations.map((p: Participation) => p.year)
+          if (data && data.length > 0) {
+            this.totalJOs = Array.from(
+              new Set(
+                data.flatMap((o: Olympic) =>
+                  o.participations.map((p: Participation) => p.year)
+                )
               )
-            )
-          ).length;
+            ).length;
 
-          const countries: string[] = data.map((o: Olympic) => o.country);
-          this.totalCountries = countries.length;
+            const countries: string[] = data.map((o: Olympic) => o.country);
+            this.totalCountries = countries.length;
+          }
+        },
+        error: (err: HttpErrorResponse) => {
+          this.error = err.message;
         }
-      },
-      error: (err: HttpErrorResponse) => {
-        this.error = err.message;
-      }
-    });
+      });
   }
 }
